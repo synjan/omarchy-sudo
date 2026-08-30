@@ -1,0 +1,65 @@
+.pragma library
+
+// Pure functions: `systemctl list-timers --output=json` in, display model out.
+// No QML in here so tests/model-test.mjs can run it under node.
+
+// [] means the expiry timer is gone, i.e. passwordless sudo is off. In current
+// systemd the JSON's "left" mirrors "next" (both epoch µs), so remaining time
+// must be computed as next/1000 minus now.
+function parseTimers(text, unit) {
+  var rows
+  try { rows = JSON.parse(text) } catch (e) { return null }
+  if (!Array.isArray(rows)) return null
+  for (var i = 0; i < rows.length; i++) {
+    var row = rows[i]
+    if (row && row.unit === unit && isFinite(Number(row.next)) && Number(row.next) > 0)
+      return { active: true, deadlineMs: Number(row.next) / 1000 }
+  }
+  return { active: false, deadlineMs: 0 }
+}
+
+function formatCountdown(ms) {
+  if (!isFinite(ms) || ms <= 0) return "0:00"
+  var total = Math.ceil(ms / 1000)
+  var h = Math.floor(total / 3600)
+  var m = Math.floor((total % 3600) / 60)
+  var s = total % 60
+  if (h > 0) return h + "t " + (m < 10 ? "0" : "") + m + "m"
+  return m + ":" + (s < 10 ? "0" : "") + s
+}
+
+function clockText(deadlineMs) {
+  if (!isFinite(deadlineMs) || deadlineMs <= 0) return ""
+  var d = new Date(deadlineMs)
+  var h = d.getHours(), m = d.getMinutes()
+  return (h < 10 ? "0" : "") + h + ":" + (m < 10 ? "0" : "") + m
+}
+
+// Red while the window is open — that is the point of the widget. Yellow when
+// systemctl itself cannot be read, grey otherwise.
+function stateColor(active, error) {
+  if (error) return "#e0af68"
+  return active ? "#f7768e" : "#7a7f95"
+}
+
+function tooltip(active, deadlineMs, now, error) {
+  if (error) return "Passwordless sudo: klarte ikke lese timer-status"
+  if (!active) return "Passwordless sudo er av — sudo krever passord"
+  return "Passwordless sudo er PÅ — utløper " + clockText(deadlineMs) + " (" + formatCountdown(deadlineMs - now) + " igjen)"
+}
+
+// Notification when the state flips underneath us (menu, CLI, expiry).
+// prev === null means first poll: never notify on shell start.
+function transitionNotice(prev, active, deadlineMs) {
+  if (prev === null || prev === active) return null
+  if (active) return { title: "Passwordless sudo aktivert", body: "Full root uten passord til " + clockText(deadlineMs) + "." }
+  return { title: "Passwordless sudo deaktivert", body: "sudo krever passord igjen." }
+}
+
+// The durations offered in the panel: the configured default highlighted
+// among the usual suspects, sorted, deduplicated.
+function durations(defaultMinutes) {
+  var list = [defaultMinutes, 15, 30, 60].filter(function (m, i, a) { return isFinite(m) && m >= 1 && a.indexOf(m) === i })
+  list.sort(function (a, b) { return a - b })
+  return list
+}

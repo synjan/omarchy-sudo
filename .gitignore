@@ -1,0 +1,4 @@
+# Nothing here is source: scratch files and captures.
+*.bak
+*.tmp
+screenshots/*.raw

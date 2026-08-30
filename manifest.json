@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "id": "synjan.sudo",
+  "name": "Passwordless Sudo",
+  "version": "1.0.0",
+  "author": "synjan",
+  "license": "MIT",
+  "description": "Shows when Omarchy's passwordless sudo is active, with a countdown in the bar and enable/extend/disable in the panel.",
+  "kinds": ["bar-widget"],
+  "entryPoints": {
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "Passwordless Sudo",
+    "description": "Countdown for the omarchy-sudo-passwordless window, read from its transient systemd timer.",
+    "category": "System",
+    "aliases": ["sudo", "nopasswd", "passwordless", "security"],
+    "allowMultiple": false,
+    "defaultSection": "right",
+    "defaults": {
+      "icon": "󰟵",
+      "defaultMinutes": 15,
+      "showWhenInactive": true,
+      "notifySecondsBefore": 60
+    },
+    "schema": [
+      { "key": "icon", "type": "string", "label": "Bar icon", "defaultValue": "󰟵",
+        "description": "Nerd Font glyph shown in the bar." },
+      { "key": "defaultMinutes", "type": "integer", "label": "Default duration (minutes)", "min": 1, "max": 480, "step": 5, "defaultValue": 15,
+        "description": "Highlighted duration for the enable/extend buttons. omarchy-sudo-passwordless defaults to 15." },
+      { "key": "showWhenInactive", "type": "boolean", "label": "Show while inactive", "defaultValue": true,
+        "description": "Keep a dim glyph in the bar while passwordless sudo is off. Off hides the widget until it activates." },
+      { "key": "notifySecondsBefore", "type": "integer", "label": "Warn before expiry (seconds)", "min": 0, "max": 900, "step": 30, "defaultValue": 60,
+        "description": "Notification this long before the window closes. 0 disables the warning." }
+    ]
+  },
+  "dependencies": []
+}
