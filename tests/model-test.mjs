@@ -40,9 +40,9 @@ eq(M.formatCountdown(500), "0:01", "countdown: half a second still counts");
 eq(M.formatCountdown(42000), "0:42", "countdown: under a minute");
 eq(M.formatCountdown(59500), "1:00", "countdown: ceil across the minute");
 eq(M.formatCountdown(15 * 60000), "15:00", "countdown: quarter of an hour");
-eq(M.formatCountdown(3600000), "1t 00m", "countdown: exactly one hour");
-eq(M.formatCountdown(3661000), "1t 01m", "countdown: seconds dropped in the hour form");
-eq(M.formatCountdown(8 * 3600000), "8t 00m", "countdown: max window");
+eq(M.formatCountdown(3600000), "1h 00m", "countdown: exactly one hour");
+eq(M.formatCountdown(3661000), "1h 01m", "countdown: seconds dropped in the hour form");
+eq(M.formatCountdown(8 * 3600000), "8h 00m", "countdown: max window");
 
 // ---------------------------------------------------------------------------
 // clockText / stateColor / tooltip
@@ -53,18 +53,18 @@ eq(M.clockText(0), "", "clockText: no deadline");
 eq(M.stateColor(true, false), "#f7768e", "stateColor: active is red");
 eq(M.stateColor(false, false), "#7a7f95", "stateColor: inactive is grey");
 eq(M.stateColor(false, true), "#e0af68", "stateColor: error is yellow");
-ok(M.tooltip(false, 0, NOON, false).indexOf("krever passord") > 0, "tooltip: inactive");
-ok(M.tooltip(true, NOON + 600000, NOON, false).indexOf("10:00 igjen") > 0, "tooltip: countdown included");
-ok(M.tooltip(true, NOON, NOON, true).indexOf("klarte ikke") > 0, "tooltip: error wins");
+ok(M.tooltip(false, 0, NOON, false).indexOf("asks for a password") > 0, "tooltip: inactive");
+ok(M.tooltip(true, NOON + 600000, NOON, false).indexOf("10:00 left") > 0, "tooltip: countdown included");
+ok(M.tooltip(true, NOON, NOON, true).indexOf("could not") > 0, "tooltip: error wins");
 
 // ---------------------------------------------------------------------------
 // transitionNotice — null on first poll and on no change.
 // ---------------------------------------------------------------------------
 ok(M.transitionNotice(null, true, NOON) === null, "notice: first poll never notifies");
 ok(M.transitionNotice(true, true, NOON) === null, "notice: unchanged");
-ok(M.transitionNotice(false, true, NOON).title.indexOf("aktivert") > 0, "notice: turned on");
+ok(M.transitionNotice(false, true, NOON).title.indexOf("enabled") > 0, "notice: turned on");
 ok(M.transitionNotice(false, true, NOON).body.indexOf("12:05") > 0, "notice: deadline in body");
-ok(M.transitionNotice(true, false, 0).title.indexOf("deaktivert") > 0, "notice: turned off");
+ok(M.transitionNotice(true, false, 0).title.indexOf("disabled") > 0, "notice: turned off");
 
 // ---------------------------------------------------------------------------
 // durations — default injected, sorted, deduplicated.

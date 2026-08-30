@@ -105,8 +105,8 @@ Item {
     var left = deadlineMs - now
     if (left > 0 && left <= notifySecondsBefore * 1000 && warnedDeadline !== deadlineMs) {
       warnedDeadline = deadlineMs
-      Quickshell.execDetached(["omarchy-notification-send", "Passwordless sudo utløper snart",
-        Model.formatCountdown(left) + " igjen — forleng fra panelet om du trenger mer."])
+      Quickshell.execDetached(["omarchy-notification-send", "Passwordless sudo expires soon",
+        Model.formatCountdown(left) + " left — extend from the panel if you need more."])
     }
   }
 

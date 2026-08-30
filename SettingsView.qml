@@ -47,7 +47,7 @@ Column {
     font.pixelSize: Math.max(8, Style.font.caption * 0.9)
   }
 
-  PanelSectionHeader { width: parent.width; text: "STANDARD VARIGHET"; foreground: view.dim }
+  PanelSectionHeader { width: parent.width; text: "DEFAULT DURATION"; foreground: view.dim }
   Flow {
     width: parent.width; spacing: Style.space(5)
     Repeater {
@@ -55,23 +55,23 @@ Column {
       Chip { required property int modelData; label: modelData + " min"; on: view.num("defaultMinutes", 15) === modelData; onTapped: view.panel.persist({ defaultMinutes: modelData }) }
     }
   }
-  Hint { text: "Uthevet knapp i panelet, og varigheten IPC-kommandoen enable bruker uten argument. Skriptets egen standard er 15." }
+  Hint { text: "Highlighted button in the panel, and the duration the enable IPC command uses without an argument. The script itself defaults to 15." }
 
-  PanelSectionHeader { width: parent.width; text: "I BAREN NÅR AV"; foreground: view.dim }
+  PanelSectionHeader { width: parent.width; text: "IN THE BAR WHILE OFF"; foreground: view.dim }
   Flow {
     width: parent.width; spacing: Style.space(5)
-    Chip { label: "Dempet ikon"; on: view.val("showWhenInactive", true) !== "false"; onTapped: view.panel.persist({ showWhenInactive: true }) }
-    Chip { label: "Skjult"; on: view.val("showWhenInactive", true) === "false"; onTapped: view.panel.persist({ showWhenInactive: false }) }
+    Chip { label: "Dim glyph"; on: view.val("showWhenInactive", true) !== "false"; onTapped: view.panel.persist({ showWhenInactive: true }) }
+    Chip { label: "Hidden"; on: view.val("showWhenInactive", true) === "false"; onTapped: view.panel.persist({ showWhenInactive: false }) }
   }
-  Hint { text: "Skjult betyr at widgeten bare dukker opp mens passwordless sudo er aktiv." }
+  Hint { text: "Hidden means the widget only appears while passwordless sudo is active." }
 
-  PanelSectionHeader { width: parent.width; text: "VARSEL FØR UTLØP"; foreground: view.dim }
+  PanelSectionHeader { width: parent.width; text: "WARN BEFORE EXPIRY"; foreground: view.dim }
   Flow {
     width: parent.width; spacing: Style.space(5)
     Repeater {
-      model: [{ v: 0, label: "Av" }, { v: 30, label: "30 s" }, { v: 60, label: "1 min" }, { v: 120, label: "2 min" }]
+      model: [{ v: 0, label: "Off" }, { v: 30, label: "30 s" }, { v: 60, label: "1 min" }, { v: 120, label: "2 min" }]
       Chip { required property var modelData; label: modelData.label; on: view.num("notifySecondsBefore", 60) === modelData.v; onTapped: view.panel.persist({ notifySecondsBefore: modelData.v }) }
     }
   }
-  Hint { text: "Varsler (på/av og før utløp) sendes bare fra primærskjermens instans. Ikonet (`icon`) endres i shell.json-oppføringen for synjan.sudo." }
+  Hint { text: "Notifications (on/off and before expiry) are sent only from the primary screen's instance. The icon (`icon`) is changed in the synjan.sudo entry of shell.json." }
 }

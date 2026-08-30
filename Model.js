@@ -24,7 +24,7 @@ function formatCountdown(ms) {
   var h = Math.floor(total / 3600)
   var m = Math.floor((total % 3600) / 60)
   var s = total % 60
-  if (h > 0) return h + "t " + (m < 10 ? "0" : "") + m + "m"
+  if (h > 0) return h + "h " + (m < 10 ? "0" : "") + m + "m"
   return m + ":" + (s < 10 ? "0" : "") + s
 }
 
@@ -43,17 +43,17 @@ function stateColor(active, error) {
 }
 
 function tooltip(active, deadlineMs, now, error) {
-  if (error) return "Passwordless sudo: klarte ikke lese timer-status"
-  if (!active) return "Passwordless sudo er av — sudo krever passord"
-  return "Passwordless sudo er PÅ — utløper " + clockText(deadlineMs) + " (" + formatCountdown(deadlineMs - now) + " igjen)"
+  if (error) return "Passwordless sudo: could not read timer state"
+  if (!active) return "Passwordless sudo is off — sudo asks for a password"
+  return "Passwordless sudo is ON — expires " + clockText(deadlineMs) + " (" + formatCountdown(deadlineMs - now) + " left)"
 }
 
 // Notification when the state flips underneath us (menu, CLI, expiry).
 // prev === null means first poll: never notify on shell start.
 function transitionNotice(prev, active, deadlineMs) {
   if (prev === null || prev === active) return null
-  if (active) return { title: "Passwordless sudo aktivert", body: "Full root uten passord til " + clockText(deadlineMs) + "." }
-  return { title: "Passwordless sudo deaktivert", body: "sudo krever passord igjen." }
+  if (active) return { title: "Passwordless sudo enabled", body: "Full root without a password until " + clockText(deadlineMs) + "." }
+  return { title: "Passwordless sudo disabled", body: "sudo asks for a password again." }
 }
 
 // The durations offered in the panel: the configured default highlighted

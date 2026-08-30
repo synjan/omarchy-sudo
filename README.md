@@ -25,7 +25,7 @@ in the floating terminal meanwhile).
 
 Large countdown and expiry clock, duration chips (**enable** when off, **new
 window from now** when on — the script replaces the timer, it does not add),
-and **Deaktiver nå**. Every action opens the same floating terminal the
+and **Disable now**. Every action opens the same floating terminal the
 SUPER+SPACE menu uses; password prompt and confirmation happen there. The
 plugin never touches sudoers itself.
 

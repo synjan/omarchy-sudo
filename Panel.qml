@@ -48,8 +48,8 @@ Panel {
   readonly property var durations: Model.durations(svc.defaultMinutes)
 
   readonly property string statusLine: {
-    if (svc.lastError) return "systemctl feilet"
-    if (!svc.known) return "Leser …"
+    if (svc.lastError) return "systemctl failed"
+    if (!svc.known) return "Reading …"
     return Qt.formatDateTime(new Date(svc.now), "HH:mm:ss")
   }
 
@@ -124,7 +124,7 @@ Panel {
             anchors.leftMargin: Style.space(8)
             anchors.right: gear.left
             elide: Text.ElideRight
-            text: root.view === "settings" ? "Passwordless sudo · Innstillinger" : "Passwordless sudo"
+            text: root.view === "settings" ? "Passwordless sudo · Settings" : "Passwordless sudo"
             color: root.textColor
             font.family: root.fontName
             font.pixelSize: Style.font.subtitle
@@ -169,7 +169,7 @@ Panel {
           visible: root.view === "main"
           Text {
             width: parent.width
-            text: svc.active ? Model.formatCountdown(svc.deadlineMs - svc.now) : "Inaktiv"
+            text: svc.active ? Model.formatCountdown(svc.deadlineMs - svc.now) : "Inactive"
             color: svc.active ? root.badColor : root.textColor
             font.family: root.fontName
             font.pixelSize: Style.font.subtitle * 1.6
@@ -178,13 +178,13 @@ Panel {
           Dim {
             width: parent.width
             text: svc.active
-              ? "Full root uten passord for alt som kjører som deg — utløper " + Model.clockText(svc.deadlineMs) + ", så slettes sudoers-fila av systemd-timeren."
-              : "sudo krever passord. Aktivering åpner root uten passord i et avgrenset tidsrom (omarchy-sudo-passwordless)."
+              ? "Full root without a password for everything running as you — expires " + Model.clockText(svc.deadlineMs) + ", when the systemd timer deletes the sudoers file."
+              : "sudo asks for a password. Enabling opens root without a password for a limited window (omarchy-sudo-passwordless)."
           }
         }
 
         // ---- actions -------------------------------------------------------
-        PanelSectionHeader { width: parent.width; visible: root.view === "main"; text: svc.active ? "NY PERIODE FRA NÅ" : "AKTIVER"; foreground: root.dimColor }
+        PanelSectionHeader { width: parent.width; visible: root.view === "main"; text: svc.active ? "NEW WINDOW FROM NOW" : "ENABLE"; foreground: root.dimColor }
         Flow {
           width: parent.width
           spacing: Style.space(5)
@@ -200,7 +200,7 @@ Panel {
           }
           Chip {
             visible: svc.active
-            label: " Deaktiver nå"
+            label: " Disable now"
             tint: root.badColor
             on: true
             onTapped: svc.disable()
@@ -210,7 +210,7 @@ Panel {
         Dim {
           width: parent.width
           visible: root.view === "main"
-          text: "Knappene åpner en flytende terminal — passord og bekreftelse skjer der, pluginen rører aldri sudoers selv. Esc lukker · midtklikk i baren oppdaterer."
+          text: "The buttons open a floating terminal — password and confirmation happen there; the plugin never touches sudoers itself. Esc closes · middle click in the bar refreshes."
         }
       }
     }
