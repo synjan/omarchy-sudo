@@ -15,7 +15,7 @@ BarWidget {
   readonly property bool showWhenInactive: String(setting("showWhenInactive", true)) !== "false"
 
   readonly property var service: panelLoader.item ? panelLoader.item.service : null
-  readonly property bool active: service ? service.active : false
+  readonly property bool active: service ? service.on : false
   readonly property double remaining: service ? service.deadlineMs - service.now : 0
   readonly property string lastError: service ? service.lastError : ""
 

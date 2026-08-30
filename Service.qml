@@ -36,8 +36,17 @@ Item {
   property bool active: false
   property double deadlineMs: 0
   property double startedMs: 0
+  // The timer can outlive the sudoers file: the toggle script removes the
+  // file before stopping the timer, and from a TTY-less context that stop
+  // fails silently (hidden by 2>/dev/null). `sudo -n true` failing proves the
+  // file is gone, so it is probed while the timer claims the window is open.
+  // Success proves nothing (cached credentials, other rules) and never
+  // overrides the timer.
+  property bool probedOff: false
+  readonly property bool on: active && !probedOff
+  property bool lastOn: false
   // Length of the current window, for the fuse. 0 while unknown.
-  readonly property double windowMs: active && startedMs > 0 && deadlineMs > startedMs ? deadlineMs - startedMs : 0
+  readonly property double windowMs: on && startedMs > 0 && deadlineMs > startedMs ? deadlineMs - startedMs : 0
   // First successful poll done; before that the state is unknown and no
   // transition notification may fire.
   property bool known: false
@@ -46,7 +55,7 @@ Item {
   property double fastUntil: 0
   property double warnedDeadline: 0
 
-  readonly property double remainingMs: active ? deadlineMs - now : 0
+  readonly property double remainingMs: on ? deadlineMs - now : 0
 
   function refresh() {
     if (pollProc.running) return
@@ -91,23 +100,46 @@ Item {
       if (!state) { service.lastError = "unexpected systemctl output"; return }
       service.lastError = ""
       service.now = Date.now()
-      var prev = service.known ? service.active : null
-      service.known = true
-      service.active = state.active
-      // A fresh deadline (activation or extension) re-arms the expiry warning.
-      if (state.deadlineMs !== service.deadlineMs) service.warnedDeadline = 0
+      // A fresh deadline (activation or extension) re-arms the expiry warning
+      // and voids the last probe verdict.
+      if (state.deadlineMs !== service.deadlineMs) { service.warnedDeadline = 0; service.probedOff = false }
+      if (state.active !== service.active) service.probedOff = false
       service.deadlineMs = state.deadlineMs
       service.startedMs = state.startedMs
-      if (prev !== null && prev !== state.active) service.fastUntil = 0
-      if (service.primary) {
-        var notice = Model.transitionNotice(prev, state.active, state.deadlineMs)
-        if (notice) Quickshell.execDetached(["omarchy-notification-send", notice.title, notice.body])
-      }
+      service.active = state.active
+      if (!service.known) { service.known = true; service.lastOn = service.on }
     }
   }
 
+  // All user-visible state flips route through `on`, whichever side moved
+  // (poll or probe). Only the primary instance notifies.
+  onOnChanged: {
+    if (!known || lastOn === on) return
+    fastUntil = 0
+    if (primary) {
+      var notice = Model.transitionNotice(lastOn, on, deadlineMs)
+      if (notice) Quickshell.execDetached(["omarchy-notification-send", notice.title, notice.body])
+    }
+    lastOn = on
+  }
+
+  Timer {
+    interval: 15000
+    running: service.active
+    repeat: true
+    triggeredOnStart: true
+    onTriggered: if (!probeProc.running) probeProc.running = true
+  }
+  Process {
+    id: probeProc
+    command: ["sudo", "-n", "true"]
+    stdout: StdioCollector { waitForEnd: true }
+    stderr: StdioCollector { waitForEnd: true }
+    onExited: function (code) { service.probedOff = (code !== 0) }
+  }
+
   function checkExpiryWarning() {
-    if (!primary || !active || notifySecondsBefore <= 0) return
+    if (!primary || !on || notifySecondsBefore <= 0) return
     var left = deadlineMs - now
     if (left > 0 && left <= notifySecondsBefore * 1000 && warnedDeadline !== deadlineMs) {
       warnedDeadline = deadlineMs

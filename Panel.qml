@@ -25,9 +25,10 @@ Panel {
 
   function statusReport() {
     return JSON.stringify({
-      active: svc.active,
-      deadline: svc.active ? new Date(svc.deadlineMs).toISOString() : "",
-      remaining: svc.active ? Model.formatCountdown(svc.deadlineMs - svc.now) : "",
+      active: svc.on,
+      timerActive: svc.active,
+      deadline: svc.on ? new Date(svc.deadlineMs).toISOString() : "",
+      remaining: svc.on ? Model.formatCountdown(svc.deadlineMs - svc.now) : "",
       error: svc.lastError, known: svc.known,
       opened: root.opened, view: root.view, primary: root.primary
     })
@@ -42,7 +43,7 @@ Panel {
   readonly property color dimColor: Qt.darker(textColor, 1.45)
   readonly property string fontName: root.bar ? root.bar.fontFamily : Style.font.family
   readonly property color accent: Color.accent
-  readonly property color stateColor: Model.stateColor(svc.active, svc.lastError !== "")
+  readonly property color stateColor: Model.stateColor(svc.on, svc.lastError !== "")
   readonly property color badColor: "#f7768e"
 
   readonly property var durations: Model.durations(svc.defaultMinutes)
@@ -167,7 +168,7 @@ Panel {
         Column {
           width: parent.width
           spacing: Style.space(6)
-          visible: root.view === "main" && svc.active
+          visible: root.view === "main" && svc.on
           Item {
             width: parent.width
             height: bigCount.implicitHeight
@@ -208,12 +209,12 @@ Panel {
         }
         Dim {
           width: parent.width
-          visible: root.view === "main" && !svc.active
+          visible: root.view === "main" && !svc.on
           text: "sudo asks for a password. Enable to open root without one for a limited window."
         }
 
         // ---- actions -------------------------------------------------------
-        PanelSectionHeader { width: parent.width; visible: root.view === "main"; text: svc.active ? "RESTART TIMER" : "ENABLE"; foreground: root.dimColor }
+        PanelSectionHeader { width: parent.width; visible: root.view === "main"; text: svc.on ? "RESTART TIMER" : "ENABLE"; foreground: root.dimColor }
         Item {
           width: parent.width
           height: Style.space(24)
@@ -226,7 +227,7 @@ Panel {
               model: root.durations
               Chip {
                 required property int modelData
-                label: (svc.active ? " " : " ") + modelData + " min"
+                label: (svc.on ? " " : " ") + modelData + " min"
                 on: modelData === svc.defaultMinutes
                 onTapped: svc.enable(modelData)
               }
@@ -235,7 +236,7 @@ Panel {
           Chip {
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
-            visible: svc.active
+            visible: svc.on
             label: " Disable now"
             tint: root.badColor
             on: true
