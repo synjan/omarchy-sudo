@@ -50,7 +50,7 @@ Panel {
   readonly property string statusLine: {
     if (svc.lastError) return "systemctl failed"
     if (!svc.known) return "Reading …"
-    return Qt.formatDateTime(new Date(svc.now), "HH:mm:ss")
+    return "checked " + Qt.formatDateTime(new Date(svc.now), "HH:mm")
   }
 
   component Chip: Rectangle {
@@ -178,13 +178,13 @@ Panel {
           Dim {
             width: parent.width
             text: svc.active
-              ? "Full root without a password for everything running as you — expires " + Model.clockText(svc.deadlineMs) + ", when the systemd timer deletes the sudoers file."
-              : "sudo asks for a password. Enabling opens root without a password for a limited window (omarchy-sudo-passwordless)."
+              ? "Anything running as you has root without a password — closes " + Model.clockText(svc.deadlineMs) + "."
+              : "sudo asks for a password. Enable to open root without one for a limited window."
           }
         }
 
         // ---- actions -------------------------------------------------------
-        PanelSectionHeader { width: parent.width; visible: root.view === "main"; text: svc.active ? "NEW WINDOW FROM NOW" : "ENABLE"; foreground: root.dimColor }
+        PanelSectionHeader { width: parent.width; visible: root.view === "main"; text: svc.active ? "RESTART TIMER" : "ENABLE"; foreground: root.dimColor }
         Flow {
           width: parent.width
           spacing: Style.space(5)
@@ -210,7 +210,7 @@ Panel {
         Dim {
           width: parent.width
           visible: root.view === "main"
-          text: "The buttons open a floating terminal — password and confirmation happen there; the plugin never touches sudoers itself. Esc closes · middle click in the bar refreshes."
+          text: "Buttons open a terminal — your password stays there. Esc closes · middle click in the bar refreshes."
         }
       }
     }
