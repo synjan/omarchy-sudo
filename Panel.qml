@@ -46,6 +46,7 @@ Panel {
   readonly property color badColor: "#f7768e"
 
   readonly property var durations: Model.durations(svc.defaultMinutes)
+  readonly property var fuse: Model.fuse(svc.windowMs, svc.deadlineMs - svc.now)
 
   readonly property string statusLine: {
     if (svc.lastError) return "systemctl failed"
@@ -165,40 +166,75 @@ Panel {
         // ---- status --------------------------------------------------------
         Column {
           width: parent.width
-          spacing: Style.space(3)
-          visible: root.view === "main"
-          Text {
+          spacing: Style.space(6)
+          visible: root.view === "main" && svc.active
+          Item {
             width: parent.width
-            text: svc.active ? Model.formatCountdown(svc.deadlineMs - svc.now) : "Inactive"
-            color: svc.active ? root.badColor : root.textColor
-            font.family: root.fontName
-            font.pixelSize: Style.font.subtitle * 1.6
-            font.bold: true
+            height: bigCount.implicitHeight
+            Text {
+              id: bigCount
+              text: Model.formatCountdown(svc.deadlineMs - svc.now)
+              color: root.badColor
+              font.family: root.fontName
+              font.pixelSize: Math.round(Style.font.subtitle * 2.15)
+              font.bold: true
+            }
+            Text {
+              anchors.right: parent.right
+              anchors.baseline: bigCount.baseline
+              text: "closes " + Model.clockText(svc.deadlineMs)
+              color: root.dimColor
+              font.family: root.fontName
+              font.pixelSize: Style.font.caption
+            }
           }
-          Dim {
+          Row {
+            id: fuseRow
             width: parent.width
-            text: svc.active
-              ? "Anything running as you has root without a password — closes " + Model.clockText(svc.deadlineMs) + "."
-              : "sudo asks for a password. Enable to open root without one for a limited window."
+            spacing: 2
+            visible: root.fuse.count > 0
+            Repeater {
+              model: root.fuse.count
+              Rectangle {
+                required property int index
+                width: (fuseRow.width - (root.fuse.count - 1) * fuseRow.spacing) / root.fuse.count
+                height: Style.space(6)
+                color: index < root.fuse.filled ? root.badColor : Qt.rgba(root.textColor.r, root.textColor.g, root.textColor.b, 0.18)
+              }
+            }
           }
+          Dim { width: parent.width; visible: root.fuse.count > 0; text: Model.fuseLabel(svc.windowMs, root.fuse.perMinute) }
+          Dim { width: parent.width; text: "Anything running as you has root without a password." }
+        }
+        Dim {
+          width: parent.width
+          visible: root.view === "main" && !svc.active
+          text: "sudo asks for a password. Enable to open root without one for a limited window."
         }
 
         // ---- actions -------------------------------------------------------
         PanelSectionHeader { width: parent.width; visible: root.view === "main"; text: svc.active ? "RESTART TIMER" : "ENABLE"; foreground: root.dimColor }
-        Flow {
+        Item {
           width: parent.width
-          spacing: Style.space(5)
+          height: Style.space(24)
           visible: root.view === "main"
-          Repeater {
-            model: root.durations
-            Chip {
-              required property int modelData
-              label: (svc.active ? " " : " ") + modelData + " min"
-              on: modelData === svc.defaultMinutes
-              onTapped: svc.enable(modelData)
+          Row {
+            anchors.left: parent.left
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: Style.space(5)
+            Repeater {
+              model: root.durations
+              Chip {
+                required property int modelData
+                label: (svc.active ? " " : " ") + modelData + " min"
+                on: modelData === svc.defaultMinutes
+                onTapped: svc.enable(modelData)
+              }
             }
           }
           Chip {
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
             visible: svc.active
             label: " Disable now"
             tint: root.badColor

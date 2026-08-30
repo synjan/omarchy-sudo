@@ -63,3 +63,33 @@ function durations(defaultMinutes) {
   list.sort(function (a, b) { return a - b })
   return list
 }
+
+// Poll output is two lines: the list-timers JSON array, then the timer's
+// ActiveEnterTimestamp (empty while inactive). The human-format timestamp is
+// local time; Date.parse cannot read it, so it is picked apart by regex.
+function parsePoll(text, unit) {
+  var lines = String(text).split("\n")
+  var state = parseTimers(lines[0] || "", unit)
+  if (!state) return null
+  state.startedMs = 0
+  for (var i = 1; i < lines.length; i++) {
+    var m = lines[i].match(/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})/)
+    if (m) { state.startedMs = new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]).getTime(); break }
+  }
+  return state
+}
+
+// The fuse: one tick per minute up to an hour, then a fixed 60 ticks sharing
+// the window. Unknown window (no start timestamp) means no fuse at all.
+function fuse(windowMs, remainingMs) {
+  if (!isFinite(windowMs) || windowMs <= 0) return { count: 0, filled: 0, perMinute: false }
+  var minutes = Math.max(1, Math.round(windowMs / 60000))
+  var count = Math.min(minutes, 60)
+  var tickMs = windowMs / count
+  var filled = Math.ceil(Math.max(0, Math.min(remainingMs, windowMs)) / tickMs)
+  return { count: count, filled: Math.min(filled, count), perMinute: count === minutes && windowMs >= 60000 }
+}
+
+function fuseLabel(windowMs, perMinute) {
+  return (perMinute ? "one tick per minute · " : "") + formatCountdown(windowMs) + " window"
+}

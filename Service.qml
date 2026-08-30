@@ -35,6 +35,9 @@ Item {
 
   property bool active: false
   property double deadlineMs: 0
+  property double startedMs: 0
+  // Length of the current window, for the fuse. 0 while unknown.
+  readonly property double windowMs: active && startedMs > 0 && deadlineMs > startedMs ? deadlineMs - startedMs : 0
   // First successful poll done; before that the state is unknown and no
   // transition notification may fire.
   property bool known: false
@@ -73,7 +76,9 @@ Item {
 
   Process {
     id: pollProc
-    command: ["systemctl", "list-timers", service.timerUnit, "--output=json"]
+    command: ["bash", "-c",
+      "systemctl list-timers '" + service.timerUnit + "' --output=json; " +
+      "systemctl show '" + service.timerUnit + "' -p ActiveEnterTimestamp --value"]
     stdout: StdioCollector { id: pollOut; waitForEnd: true }
     stderr: StdioCollector { id: pollErr; waitForEnd: true }
     onExited: function (code) {
@@ -82,7 +87,7 @@ Item {
         service.lastError = detail ? detail.split("\n").pop() : "systemctl failed (" + code + ")"
         return
       }
-      var state = Model.parseTimers(String(pollOut.text || ""), service.timerUnit)
+      var state = Model.parsePoll(String(pollOut.text || ""), service.timerUnit)
       if (!state) { service.lastError = "unexpected systemctl output"; return }
       service.lastError = ""
       service.now = Date.now()
@@ -92,6 +97,7 @@ Item {
       // A fresh deadline (activation or extension) re-arms the expiry warning.
       if (state.deadlineMs !== service.deadlineMs) service.warnedDeadline = 0
       service.deadlineMs = state.deadlineMs
+      service.startedMs = state.startedMs
       if (prev !== null && prev !== state.active) service.fastUntil = 0
       if (service.primary) {
         var notice = Model.transitionNotice(prev, state.active, state.deadlineMs)

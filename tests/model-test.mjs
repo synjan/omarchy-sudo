@@ -7,7 +7,7 @@ import { dirname, join } from "node:path";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const source = readFileSync(join(here, "..", "Model.js"), "utf8").replace(".pragma library", "");
-const exported = ["parseTimers", "formatCountdown", "clockText", "stateColor", "tooltip", "transitionNotice", "durations"];
+const exported = ["parseTimers", "formatCountdown", "clockText", "stateColor", "tooltip", "transitionNotice", "durations", "parsePoll", "fuse", "fuseLabel"];
 const M = new Function(`${source}\nreturn { ${exported.join(", ")} };`)();
 
 let checks = 0;
@@ -73,6 +73,32 @@ eq(M.durations(15), [15, 30, 60], "durations: default already present");
 eq(M.durations(5), [5, 15, 30, 60], "durations: default injected first");
 eq(M.durations(45), [15, 30, 45, 60], "durations: default sorted into place");
 eq(M.durations(NaN), [15, 30, 60], "durations: broken default ignored");
+
+// ---------------------------------------------------------------------------
+// parsePoll — JSON line plus ActiveEnterTimestamp line.
+// ---------------------------------------------------------------------------
+const POLL = REAL + "\nSun 2026-08-30 23:33:42 CEST";
+{
+  const s = M.parsePoll(POLL, UNIT);
+  ok(s.active && s.deadlineMs > 0, "parsePoll: active state kept");
+  eq(s.startedMs, new Date(2026, 7, 30, 23, 33, 42).getTime(), "parsePoll: local start parsed");
+}
+eq(M.parsePoll("[]\n", UNIT), { active: false, deadlineMs: 0, startedMs: 0 }, "parsePoll: inactive, empty stamp");
+eq(M.parsePoll(REAL, UNIT).startedMs, 0, "parsePoll: missing stamp line is fine");
+ok(M.parsePoll("{", UNIT) === null, "parsePoll: garbage JSON");
+
+// ---------------------------------------------------------------------------
+// fuse — one tick per minute up to an hour, then 60 shared ticks.
+// ---------------------------------------------------------------------------
+eq(M.fuse(15 * 60000, 12.5 * 60000), { count: 15, filled: 13, perMinute: true }, "fuse: 15 min window, 12:30 left");
+eq(M.fuse(15 * 60000, 15 * 60000), { count: 15, filled: 15, perMinute: true }, "fuse: full window");
+eq(M.fuse(15 * 60000, 0), { count: 15, filled: 0, perMinute: true }, "fuse: burnt out");
+eq(M.fuse(15 * 60000, -5000), { count: 15, filled: 0, perMinute: true }, "fuse: past deadline clamps");
+eq(M.fuse(120 * 60000, 60 * 60000), { count: 60, filled: 30, perMinute: false }, "fuse: 2h window scales to 60 ticks");
+eq(M.fuse(0, 0), { count: 0, filled: 0, perMinute: false }, "fuse: unknown window hides the fuse");
+eq(M.fuse(30000, 30000), { count: 1, filled: 1, perMinute: false }, "fuse: sub-minute window gets one tick");
+eq(M.fuseLabel(15 * 60000, true), "one tick per minute · 15:00 window", "fuseLabel: per-minute");
+eq(M.fuseLabel(120 * 60000, false), "2h 00m window", "fuseLabel: scaled");
 
 if (failures.length) {
   for (const f of failures) console.error("FAIL:", f);
