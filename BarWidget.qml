@@ -21,7 +21,15 @@ BarWidget {
 
   readonly property bool shown: active || showWhenInactive
   readonly property string displayText: active ? icon + " " + Model.formatCountdown(root.remaining) : icon
-  readonly property color pillColor: Model.stateColor(root.active, root.lastError !== "")
+  // The bar can be translucent over any wallpaper, so an open window is a
+  // filled badge in the theme's bar-urgent color rather than colored text —
+  // the only thing that stays legible everywhere. Text color by luminance.
+  readonly property bool alert: root.active || root.lastError !== ""
+  readonly property color alertColor: root.bar && root.bar.urgent !== undefined ? root.bar.urgent : "#a55555"
+  readonly property color pillColor: {
+    if (root.alert) return Model.textOn(root.alertColor.r, root.alertColor.g, root.alertColor.b)
+    return root.bar && root.bar.foreground !== undefined ? Qt.darker(root.bar.foreground, 1.45) : "#7a7f95"
+  }
 
   function refresh() { if (service) service.refresh() }
 
@@ -133,6 +141,15 @@ BarWidget {
     function show(): void { root.open() }
     function hide(): void { root.close() }
     function toggle(): void { root.togglePanel() }
+  }
+
+  Rectangle {
+    visible: root.shown && root.alert
+    anchors.centerIn: button
+    width: button.implicitWidth
+    height: Math.max(16, button.implicitHeight - 12)
+    radius: height / 2
+    color: root.alertColor
   }
 
   WidgetButton {

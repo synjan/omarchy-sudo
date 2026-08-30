@@ -43,8 +43,8 @@ Panel {
   readonly property color dimColor: Qt.darker(textColor, 1.45)
   readonly property string fontName: root.bar ? root.bar.fontFamily : Style.font.family
   readonly property color accent: Color.accent
-  readonly property color stateColor: Model.stateColor(svc.on, svc.lastError !== "")
-  readonly property color badColor: "#f7768e"
+  readonly property color stateColor: (svc.on || svc.lastError !== "") ? root.badColor : root.dimColor
+  readonly property color badColor: Color.urgent
 
   readonly property var durations: Model.durations(svc.defaultMinutes)
   readonly property var fuse: Model.fuse(svc.windowMs, svc.deadlineMs - svc.now)

@@ -7,7 +7,7 @@ import { dirname, join } from "node:path";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const source = readFileSync(join(here, "..", "Model.js"), "utf8").replace(".pragma library", "");
-const exported = ["parseTimers", "formatCountdown", "clockText", "stateColor", "tooltip", "transitionNotice", "durations", "parsePoll", "fuse", "fuseLabel"];
+const exported = ["parseTimers", "formatCountdown", "clockText", "textOn", "tooltip", "transitionNotice", "durations", "parsePoll", "fuse", "fuseLabel"];
 const M = new Function(`${source}\nreturn { ${exported.join(", ")} };`)();
 
 let checks = 0;
@@ -50,9 +50,10 @@ eq(M.formatCountdown(8 * 3600000), "8h 00m", "countdown: max window");
 const NOON = new Date(2026, 7, 30, 12, 5, 0).getTime();
 eq(M.clockText(NOON), "12:05", "clockText: local zero-padded minutes");
 eq(M.clockText(0), "", "clockText: no deadline");
-eq(M.stateColor(true, false), "#f7768e", "stateColor: active is red");
-eq(M.stateColor(false, false), "#7a7f95", "stateColor: inactive is grey");
-eq(M.stateColor(false, true), "#e0af68", "stateColor: error is yellow");
+eq(M.textOn(0.968, 0.463, 0.557), "#15161e", "textOn: light red badge gets dark text");
+eq(M.textOn(0.647, 0.333, 0.333), "#f8f8f2", "textOn: dark red badge gets light text");
+eq(M.textOn(1, 1, 1), "#15161e", "textOn: white gets dark text");
+eq(M.textOn(0, 0, 0), "#f8f8f2", "textOn: black gets light text");
 ok(M.tooltip(false, 0, NOON, false).indexOf("asks for a password") > 0, "tooltip: inactive");
 ok(M.tooltip(true, NOON + 600000, NOON, false).indexOf("10:00 left") > 0, "tooltip: countdown included");
 ok(M.tooltip(true, NOON, NOON, true).indexOf("could not") > 0, "tooltip: error wins");

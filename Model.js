@@ -35,11 +35,11 @@ function clockText(deadlineMs) {
   return (h < 10 ? "0" : "") + h + ":" + (m < 10 ? "0" : "") + m
 }
 
-// Red while the window is open — that is the point of the widget. Yellow when
-// systemctl itself cannot be read, grey otherwise.
-function stateColor(active, error) {
-  if (error) return "#e0af68"
-  return active ? "#f7768e" : "#7a7f95"
+// Text color that is guaranteed readable on a filled badge of the given
+// color, whatever theme or wallpaper sits behind the bar.
+function textOn(r, g, b) {
+  var lum = 0.299 * r + 0.587 * g + 0.114 * b
+  return lum > 0.5 ? "#15161e" : "#f8f8f2"
 }
 
 function tooltip(active, deadlineMs, now, error) {
