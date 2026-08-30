@@ -5,6 +5,12 @@ limited window — useful for AI agents, invisible once enabled. This widget
 makes the state impossible to miss: a red countdown in the bar while the
 window is open, a dim glyph (or nothing) while it is closed.
 
+![The bar while the window is open](screenshots/bar-strip.png)
+
+| Open | Closed |
+|---|---|
+| ![Panel while the window is open](screenshots/panel-active.png) | ![Panel while closed](screenshots/panel-inactive.png) |
+
 ```
 BarWidget ── Panel ── Service ──▶ systemctl list-timers omarchy-nopasswd-expire-$USER.timer
                                   omarchy-launch-floating-terminal-with-presentation
@@ -23,9 +29,12 @@ in the floating terminal meanwhile).
 
 ## Panel
 
-Large countdown and expiry clock, duration chips (**enable** when off, **new
-window from now** when on — the script replaces the timer, it does not add),
-and **Disable now**. Every action opens the same floating terminal the
+A large countdown with the closing time, and a fuse underneath: one tick per
+minute of the window, read from the timer's `ActiveEnterTimestamp` (so it
+survives shell restarts; past an hour 60 ticks share the window, and an
+unknown window just hides the fuse). Duration chips restart the timer from
+now — the script replaces the window, it does not add — and **Disable now**
+sits apart on the right. Every action opens the same floating terminal the
 SUPER+SPACE menu uses; password prompt and confirmation happen there. The
 plugin never touches sudoers itself.
 
