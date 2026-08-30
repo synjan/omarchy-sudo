@@ -47,6 +47,9 @@ widget, and a warning shortly before expiry.
 omarchy plugin add https://github.com/synjan/omarchy-sudo
 ```
 
+Remove again with `omarchy plugin remove synjan.sudo` — the plugin keeps no
+state outside its own `~/.config/omarchy/shell.json` entry.
+
 ## Settings
 
 Inline in the `synjan.sudo` entry of `~/.config/omarchy/shell.json`, or via
@@ -69,3 +72,9 @@ sudoers.
 ```
 node tests/model-test.mjs
 ```
+
+## License and dependencies
+
+MIT (see LICENSE). No external dependencies: state is read with `systemctl`
+(no root needed), actions run Omarchy's own `omarchy-sudo-passwordless` in a
+floating terminal, and the consistency probe is `sudo -n true` (never prompts).
